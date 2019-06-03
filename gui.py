@@ -21,12 +21,13 @@ class App:
         self.canvas.pack()
         
         # Button that lets the user take a snapshot
-        self.btn_snapshot=tkinter.Button(window, text="Rotate", width=50, command=self.snapshot)
+        self.btn_snapshot=tkinter.Button(window, text="Rotate", width=25, command=self.snapshot)
         self.btn_snapshot.pack(anchor=tkinter.CENTER, expand=True)
         
-        #circle parameters
-        self.x = 100
-        self.y = 100
+        #btn
+        self.btn_add = tkinter.Button(window, text = "++", width = 25, command = self.adding)
+        self.btn_add.pack(anchor = tkinter.CENTER, expand = True)
+
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 15
         self.deg = 0
@@ -42,6 +43,9 @@ class App:
             cv2.imwrite("frame-" + time.strftime("%d-%m-%Y-%H-%M-%S") + ".jpg", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
         '''
         self.deg += 90
+
+    def adding(self):
+        self.vid.y += 10
 
     def update(self):
         # Get a frame from the video source
@@ -60,7 +64,11 @@ class MyVideoCapture:
          self.vid = cv2.VideoCapture(video_source)
          if not self.vid.isOpened():
              raise ValueError("Unable to open video source", video_source)
- 
+
+
+         self.x = 100
+         self.y = 100
+         self.counter = 3
          # Get video source width and height
          self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
          self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -74,7 +82,22 @@ class MyVideoCapture:
                 # Return a boolean success flag and the current frame converted to BGR
                 frame = imutils.rotate_bound(frame, deg)
                 humans = self.e.inference(frame, resize_to_default=(self.width and self.height),upsample_size = 4.0)
-                frame = TfPoseEstimator.draw_humans(frame, humans, imgcopy = False)
+                frame,neck_y = TfPoseEstimator.draw_humans(frame, humans, imgcopy = False)
+                print(self.y)
+                if np.abs(neck_y-self.y) < 100 and self.y < neck_y:
+                    self.y = neck_y#np.abs(neck_y-self.y)
+                if self.y > 400:
+                    self.y = 100
+                    self.counter -=1
+                if self.counter == 0:
+                    cv2.putText(frame,'Pososee',(200,200),cv2.FONT_HERSHEY_SIMPLEX,2,(0,0,255),5)
+                else:
+                    cv2.putText(frame,'Make '+str(self.counter) + ' squats',(10,50),cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),2)
+
+                #circle drawing
+                cv2.circle(frame,(self.x,self.y),5,(0,255,0),-1)
+                
+
                 try:
                     #print(type(humans[0]))
                     pass
