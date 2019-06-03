@@ -66,8 +66,9 @@ class MyVideoCapture:
              raise ValueError("Unable to open video source", video_source)
 
 
-         self.x = 100
+         self.x = 10
          self.y = 100
+
          self.counter = 3
          # Get video source width and height
          self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -83,12 +84,13 @@ class MyVideoCapture:
                 frame = imutils.rotate_bound(frame, deg)
                 humans = self.e.inference(frame, resize_to_default=(self.width and self.height),upsample_size = 4.0)
                 frame,neck_y = TfPoseEstimator.draw_humans(frame, humans, imgcopy = False)
-                print(self.y)
+                #print(self.y)
                 if np.abs(neck_y-self.y) < 100 and self.y < neck_y:
                     self.y = neck_y#np.abs(neck_y-self.y)
                 if self.y > 400:
                     self.y = 100
-                    self.counter -=1
+                    if self.counter > 0:
+                        self.counter -=1
                 if self.counter == 0:
                     cv2.putText(frame,'Pososee',(200,200),cv2.FONT_HERSHEY_SIMPLEX,2,(0,0,255),5)
                 else:
